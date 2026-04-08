@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
+import '../providers/settings_provider.dart';
 import '../providers/stats_provider.dart';
 import '../common/gaming_ui.dart';
 
@@ -13,6 +14,9 @@ class ResultsScreen extends ConsumerWidget {
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final int patternsCorrect = args?['patternsCorrect'] ?? 0;
     final int errors = args?['errors'] ?? 0;
+    final int totalScore = args?['totalScore'] ?? (patternsCorrect * 100);
+    final int maxCombo = args?['maxCombo'] ?? 1;
+    final GameMode mode = args?['mode'] ?? GameMode.classic;
     
     final int total = patternsCorrect + errors;
     final double accuracy = total == 0 ? 0 : (patternsCorrect / total * 100);
@@ -96,13 +100,30 @@ class ResultsScreen extends ConsumerWidget {
                              isPercent: false,
                            ),
                            const Divider(height: 48, color: Colors.white10),
-                           _CountUpHudRow(
-                             label: 'MISSION_ACCURACY', 
-                             finalValue: accuracy, 
-                             color: Colors.amberAccent, 
-                             isPercent: true,
-                             isLarge: true,
-                           ),
+                            _CountUpHudRow(
+                              label: 'MISSION_ACCURACY', 
+                              finalValue: accuracy, 
+                              color: Colors.amberAccent, 
+                              isPercent: true,
+                              isLarge: true,
+                            ),
+                            const Divider(height: 32, color: Colors.white10),
+                            _CountUpHudRow(
+                              label: 'TOTAL_REWARD', 
+                              finalValue: totalScore.toDouble(), 
+                              color: Colors.greenAccent, 
+                              isPercent: false,
+                            ),
+                            if (mode == GameMode.speedRun) ...[
+                              const SizedBox(height: 16),
+                              _CountUpHudRow(
+                                label: 'HIGHEST_COMBO', 
+                                finalValue: maxCombo.toDouble(), 
+                                color: primary, 
+                                isPercent: false,
+                                suffix: 'x',
+                              ),
+                            ],
                          ],
                        )
                      ),
@@ -118,13 +139,17 @@ class ResultsScreen extends ConsumerWidget {
                            label: 'RE-INITIALIZE',
                            icon: Icons.refresh_rounded,
                            onPressed: () {
-                             Navigator.of(context).pushReplacementNamed('/game');
+                             if (mode == GameMode.numberMemory) {
+                               Navigator.of(context).pushReplacementNamed('/game_number');
+                             } else {
+                               Navigator.of(context).pushReplacementNamed('/game');
+                             }
                            },
                          ),
                          const SizedBox(height: 16),
                          TextButton(
                            onPressed: () {
-                             ref.read(gameStatsProvider.notifier).updateStats(patternsCorrect, errors);
+                             ref.read(gameStatsProvider.notifier).updateStats(mode, patternsCorrect, errors);
                              Navigator.of(context).pushReplacementNamed('/home');
                            },
                            child: Text(
@@ -155,6 +180,7 @@ class _CountUpHudRow extends StatelessWidget {
   final Color color;
   final bool isPercent;
   final bool isLarge;
+  final String? suffix;
 
   const _CountUpHudRow({
      required this.label,
@@ -162,6 +188,7 @@ class _CountUpHudRow extends StatelessWidget {
      required this.color,
      required this.isPercent,
      this.isLarge = false,
+     this.suffix,
   });
 
   @override
@@ -182,7 +209,8 @@ class _CountUpHudRow extends StatelessWidget {
            duration: const Duration(milliseconds: 1500),
            curve: Curves.easeOutQuart,
            builder: (context, value, child) {
-             final displayValue = isPercent ? '${value.toStringAsFixed(0)}%' : value.toInt().toString();
+             final valStr = isPercent ? '${value.toStringAsFixed(0)}%' : value.toInt().toString();
+             final displayValue = suffix != null ? '$suffix$valStr' : valStr;
              return Text(
                displayValue,
                style: GoogleFonts.orbitron(

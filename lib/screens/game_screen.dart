@@ -1,8 +1,10 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:animate_do/animate_do.dart';
+import '../providers/settings_provider.dart';
 import '../providers/game_state_provider.dart';
 import '../providers/stats_provider.dart';
 import '../common/gaming_ui.dart';
@@ -31,11 +33,28 @@ class _GameScreenState extends ConsumerState<GameScreen> {
     final primary = Theme.of(context).colorScheme.primary;
 
     ref.listen(gameStateProvider, (prev, next) {
-      if (prev != null && prev.timeRemaining > 0 && next.timeRemaining == 0) {
-        ref.read(gameStatsProvider.notifier).updateStats(next.patternsCorrect, next.errors);
+      bool isClassicEnd = next.mode == GameMode.classic && prev != null && prev.timeRemaining > 0 && next.timeRemaining == 0;
+      bool isSpeedRunEnd = next.mode == GameMode.speedRun && prev != null && prev.timeRemaining != -1 && next.timeRemaining == -1;
+      
+      if (isClassicEnd || isSpeedRunEnd) {
+        final total = next.patternsCorrect + next.errors;
+        final accuracy = total == 0 ? 0.0 : (next.patternsCorrect / total * 100);
+        
+        ref.read(gameStatsProvider.notifier).updateStats(next.mode, next.patternsCorrect, next.errors);
+        ref.read(persistentStatsProvider.notifier).recordSession(
+          mode: next.mode,
+          difficulty: ref.read(settingsProvider),
+          patternsCorrect: next.patternsCorrect, 
+          accuracy: accuracy, 
+          totalScore: next.totalScore,
+        );
+        
         Navigator.of(context).pushReplacementNamed('/results', arguments: {
           'patternsCorrect': next.patternsCorrect,
           'errors': next.errors,
+          'totalScore': next.totalScore,
+          'maxCombo': next.maxCombo,
+          'mode': next.mode,
         });
       }
     });
@@ -115,7 +134,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'SCORE: ${state.patternsCorrect * 100}',
+                              'SCORE: ${state.mode == GameMode.classic ? state.patternsCorrect * 100 : state.totalScore}',
                               style: GoogleFonts.orbitron(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -124,29 +143,76 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                             ),
                           ],
                         ),
+                        if (state.mode == GameMode.speedRun)
+                          Column(
+                            children: [
+                              Text(
+                                'COMBO',
+                                style: GoogleFonts.shareTechMono(
+                                  fontSize: 10,
+                                  color: primary.withOpacity(0.5),
+                                ),
+                              ),
+                              Text(
+                                'x${state.combo}',
+                                style: GoogleFonts.orbitron(
+                                  color: primary,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ],
+                          ),
                         Column(
                           children: [
                             Text(
-                              'CORE_TIME',
+                              state.mode == GameMode.classic ? 'CORE_TIME' : 'ROUND_TIME',
                               style: GoogleFonts.shareTechMono(
                                 fontSize: 10,
                                 color: timerColor.withOpacity(0.5),
                               ),
                             ),
-                            Text(
-                              timeStr,
-                              style: GoogleFonts.shareTechMono(
-                                color: timerColor,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                shadows: [
-                                  Shadow(
-                                    color: timerColor.withOpacity(0.5),
-                                    blurRadius: 10,
-                                  ),
-                                ],
+                            if (state.mode == GameMode.classic)
+                              Text(
+                                timeStr,
+                                style: GoogleFonts.shareTechMono(
+                                  color: timerColor,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [
+                                    Shadow(
+                                      color: timerColor.withOpacity(0.5),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else
+                              SizedBox(
+                                width: 80,
+                                child: Column(
+                                  children: [
+                                    const SizedBox(height: 8),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: state.roundTime / (max(1.5, 5.0 - (state.roundNumber - 1) * 0.2)),
+                                        backgroundColor: Colors.white10,
+                                        valueColor: AlwaysStoppedAnimation<Color>(timerColor),
+                                        minHeight: 8,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${state.roundTime.toStringAsFixed(1)}s',
+                                      style: GoogleFonts.shareTechMono(
+                                        color: timerColor,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
                           ],
                         ),
                         Column(
@@ -160,7 +226,7 @@ class _GameScreenState extends ConsumerState<GameScreen> {
                               ),
                             ),
                             Text(
-                              '${state.roundNumber.toString().padLeft(2, '0')}',
+                              '${state.roundNumber.toString().padLeft(2, '0')}${state.mode == GameMode.speedRun ? "/20" : ""}',
                               style: GoogleFonts.orbitron(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,

@@ -7,6 +7,7 @@ import 'screens/auth_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/game_screen.dart';
+import 'screens/number_memory_screen.dart';
 import 'screens/results_screen.dart';
 
 void main() async {
@@ -130,6 +131,9 @@ class PatternMindApp extends StatelessWidget {
             break;
           case '/game':
             page = const GameScreen();
+            break;
+          case '/game_number':
+            page = const NumberMemoryScreen();
             break;
           case '/results':
             page = const ResultsScreen();

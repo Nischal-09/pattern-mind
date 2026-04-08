@@ -22,23 +22,23 @@ flutter pub get
 ## 3. Configure Environment Variables
 1. Create a file named `.env` in the root directory.
 2. Copy the contents from `.env.example` into `.env`.
-3. Fill in your Supabase project details:
+3. Fill in your Supabase project details (REQUIRED for Auth):
 ```env
 SUPABASE_URL=https://your-project-url.supabase.co
 SUPABASE_ANON_KEY=your-anon-key
 ```
+> [!NOTE]
+> Ensure `.env` is listed in your `pubspec.yaml` assets.
 
-## 4. Supabase Database Setup
-Ensure your Supabase project has a `stats` table with the following schema:
-- `id`: uuid (primary key)
-- `user_id`: uuid (references auth.users)
-- `patterns_correct`: int4
-- `errors`: int4
-- `accuracy`: float8
-- `difficulty`: text
-- `created_at`: timestamptz (default: now())
+## 4. Database Persistence
+PatternMind uses a hybrid storage system:
+- **Supabase**: Handles user authentication and secure login.
+- **SQLite**: Stores your local game stats, personal bests, and win streaks.
 
-Enable **RLS (Row Level Security)** on the `stats` table and add policies to allow users to `select` and `insert` their own data.
+The SQLite schema is automatically initialized on the first run:
+- Table: `game_stats` (ID, Mode, Difficulty, Patterns_Correct, Accuracy, Total_Score, Timestamp)
+
+No manual SQL setup is required for the local database.
 
 ## 5. Run the App
 ```bash

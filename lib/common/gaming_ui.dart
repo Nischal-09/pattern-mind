@@ -183,3 +183,42 @@ class NeonButton extends StatelessWidget {
     );
   }
 }
+
+class SuccessOverlay extends StatelessWidget {
+  const SuccessOverlay({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return ClipRRect(
+      child: Container(
+        decoration: BoxDecoration(
+          color: primary.withOpacity(0.2),
+          border: Border.all(color: primary, width: 2),
+        ),
+        child: const Center(
+          child: Icon(Icons.check_circle_outline, color: Colors.white, size: 64),
+        ),
+      ),
+    );
+  }
+}
+
+class ErrorOverlay extends StatelessWidget {
+  const ErrorOverlay({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.redAccent.withOpacity(0.2),
+          border: Border.all(color: Colors.redAccent, width: 2),
+        ),
+        child: const Center(
+          child: Icon(Icons.error_outline, color: Colors.white, size: 64),
+        ),
+      ),
+    );
+  }
+}

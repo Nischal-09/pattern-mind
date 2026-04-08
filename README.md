@@ -8,27 +8,31 @@
 Test your brain across three dynamic difficulty levels. Memorize the glowing patterns, beat the 60-second countdown, and track your progress with detailed post-session analytics.
 
 ### How to Play:
-1. **Choose Your Difficulty**: Easy, Medium, or Hard.
-2. **Memorize the Pattern**: A glowing sequence will appear on the grid.
-3. **Replicate the Pattern**: Tap the correct tiles before the timer runs out!
+1. **Choose Your Difficulty**: Easy (3x3), Medium (4x4), or Hard (4x4).
+2. **Select Your Mode**:
+    - **Classic**: 60-second endurance challenge.
+    - **Speed Run**: 20-round blitz with decreasing time limits.
+    - **Number Memory**: Rapid-fire digit sequence recall.
+3. **Memorize & Replicate**: Glow, tap, and conquer.
 4. **Track Your Stats**: Review your accuracy and patterns-per-session after each round.
 
 ---
 
 ## ✨ Features
 - **Neon Cyberpunk Aesthetic**: A stunning dark-mode UI with vibrant cyan and purple accents.
-- **Dynamic Difficulty**: Adapt with Easy (3x3), Medium (4x4), and Hard (5x5) grid sizes.
-- **State-of-the-Art Animations**: Powered by `animate_do` for a fluid and high-end feel.
-- **Secure Cloud Sync**: Integrated with Supabase for real-time authentication and global state syncing.
-- **Live Performance Stats**: Deep insights into your accuracy, speed, and error rates using count-up animations.
+- **Three Dynamic Modes**: Classic, Speed Run (Blitz), and Number Memory.
+- **Progressive Difficulty**: Adapt with grid sizes and shrinking memorization windows.
+- **Hybrid Persistence**: Secure cloud auth with **Supabase** and high-speed local storage with **SQLite**.
+- **Live Performance HUD**: Deep insights into your accuracy, speed, and combos.
 
 ---
 
 ## 🚀 Tech Stack
 - **Frontend**: Flutter & Dart
-- **State Management**: Riverpod (with Code Generation)
-- **Backend/Auth**: Supabase
-- **Styling**: Google Fonts (Orbitron, Nunito)
+- **State Management**: Riverpod
+- **Local Database**: SQLite (`sqflite`)
+- **Cloud/Auth**: Supabase
+- **Typography**: Orbitron, Nunito
 - **Animations**: `animate_do`
 
 ---
